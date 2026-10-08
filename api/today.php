@@ -146,6 +146,31 @@ try {
         ];
     }
 
+    // 連絡・申し送りメモ情報取得
+    $stmtMemo = $pdo->prepare("
+        SELECT setting_value, updated_at 
+        FROM settings 
+        WHERE setting_key = 'memo_text'
+    ");
+    $stmtMemo->execute();
+    $memoRow = $stmtMemo->fetch(PDO::FETCH_ASSOC);
+    $memoText = $memoRow['setting_value'] ?? '';
+    $rawMemoLines = preg_split('/\r\n|\r|\n/', (string)$memoText);
+    $memoLines = [];
+    foreach ($rawMemoLines as $ml) {
+        $t = trim($ml);
+        if ($t !== '') {
+            $memoLines[] = $t;
+        }
+    }
+    $memoData = [
+        'has_memo' => !empty(trim((string)$memoText)),
+        'text' => $memoText,
+        'lines' => $memoLines,
+        'line_count' => count($memoLines),
+        'updated_at' => !empty($memoRow['updated_at']) ? date('c', strtotime($memoRow['updated_at'])) : null,
+    ];
+
     $response = [
         'target_date' => $targetDate,
         'weekday' => $weekday,
@@ -158,10 +183,12 @@ try {
             'other_count' => count($otherList),
             'total_events' => count($formattedEvents),
             'has_all_meeting' => ($meetingData !== null),
+            'has_memo' => $memoData['has_memo'],
         ],
         'absent_doctors' => $absentList,
         'clinic_doctors' => $clinicList,
         'all_meeting' => $meetingData,
+        'memo' => $memoData,
         'all_events' => $formattedEvents,
     ];
 

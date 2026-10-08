@@ -13,12 +13,14 @@
  */
 
 // CORSヘッダー（院内システムからの連携を許可）
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, X-Tab-ID");
+if (!headers_sent()) {
+    header("Access-Control-Allow-Origin: *");
+    header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+    header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, X-Tab-ID");
+}
 
 // OPTIONSプリフライトリクエストの即時終了
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(204);
     exit;
 }
@@ -33,8 +35,10 @@ require_once __DIR__ . '/../LIB/db.php';
  * @param int $httpCode
  */
 function apiSuccess($data, $meta = [], $httpCode = 200) {
-    http_response_code($httpCode);
-    header('Content-Type: application/json; charset=utf-8');
+    if (!headers_sent()) {
+        http_response_code($httpCode);
+        header('Content-Type: application/json; charset=utf-8');
+    }
 
     $response = [
         'status' => 'success',
@@ -60,8 +64,10 @@ function apiSuccess($data, $meta = [], $httpCode = 200) {
  * @param array $details
  */
 function apiError($message, $httpCode = 400, $details = []) {
-    http_response_code($httpCode);
-    header('Content-Type: application/json; charset=utf-8');
+    if (!headers_sent()) {
+        http_response_code($httpCode);
+        header('Content-Type: application/json; charset=utf-8');
+    }
 
     $response = [
         'status' => 'error',

@@ -264,6 +264,7 @@
                 <li class="sidebar-nav-item"><a href="#ep-doctors"><span class="sidebar-badge get">GET</span> /api/doctors.php</a></li>
                 <li class="sidebar-nav-item"><a href="#ep-departments"><span class="sidebar-badge get">GET</span> /api/departments.php</a></li>
                 <li class="sidebar-nav-item"><a href="#ep-meetings"><span class="sidebar-badge get">GET</span> /api/meetings.php</a></li>
+                <li class="sidebar-nav-item"><a href="#ep-memo"><span class="sidebar-badge get">GET</span> /api/memo.php</a></li>
                 <li class="sidebar-nav-item"><a href="#ep-feed"><span class="sidebar-badge get" style="background:#e0f2fe;color:#0369a1;">iCal</span> /api/feed.php</a></li>
             </ul>
         </div>
@@ -352,7 +353,8 @@
             "clinic_count": 0,
             "other_count": 0,
             "total_events": 1,
-            "has_all_meeting": false
+            "has_all_meeting": false,
+            "has_memo": true
         },
         "absent_doctors": [
             {
@@ -370,7 +372,17 @@
             }
         ],
         "clinic_doctors": [],
-        "all_meeting": null
+        "all_meeting": null,
+        "memo": {
+            "has_memo": true,
+            "text": "矢野哲也医師：第2土曜診察あり（その週の水曜は公休）...",
+            "lines": [
+                "矢野哲也医師：第2土曜診察あり（その週の水曜は公休）",
+                "小野会全体会：毎月最終水曜日 13:00〜（胃腸科1F食堂）"
+            ],
+            "line_count": 2,
+            "updated_at": "2026-08-10T10:05:48+09:00"
+        }
     }
 }</code></pre>
         </section>
@@ -413,9 +425,58 @@
             <p>全体会の開催予定一覧。パラメータ: <code>year</code> (年数値), <code>month</code> (月数値)。</p>
         </section>
 
-        <!-- 5. iCalendar フィード -->
+        <!-- 5. 連絡・申し送りメモ取得API -->
+        <section class="spec-section" id="ep-memo">
+            <h2 class="section-title"><i class="fa-solid fa-note-sticky" style="color:var(--primary);"></i> 5. 連絡・申し送りメモ取得 API</h2>
+            <div class="endpoint-banner">
+                <span class="method get">GET</span>
+                <span class="endpoint-path">/api/memo.php</span>
+            </div>
+            <p><strong>用途:</strong> 医師予定表の最上部に常時掲載される自由記述メモ（診察予定の補足、休診振替、全体会連絡など）を取得するAPI。受付サイネージ、電光掲示板、院内グループウェア等の連携に適しています。</p>
+
+            <h3 class="sub-title">リクエストパラメータ</h3>
+            <table class="spec-table">
+                <thead><tr><th>パラメータ名</th><th>型</th><th>必須</th><th>デフォルト</th><th>説明</th></tr></thead>
+                <tbody>
+                    <tr><td><code>format</code></td><td>string</td><td>任意</td><td><code>json</code></td><td>レスポンス形式。<code>json</code> または <code>plain</code>（<code>text</code>）。<code>plain</code> 指定時はメモ本文のみを <code>Content-Type: text/plain</code> で返却。</td></tr>
+                    <tr><td><code>trim</code></td><td>integer</td><td>任意</td><td>1</td><td>空行の除外と行前後の余白トリム。<code>1</code>（有効）または <code>0</code>（無効・元フォーマットを維持）。</td></tr>
+                </tbody>
+            </table>
+
+            <h3 class="sub-title">JSONレスポンス例 (<code>GET /api/memo.php</code>)</h3>
+            <pre><code>{
+    "status": "success",
+    "code": 200,
+    "timestamp": "2026-10-08T23:31:09+09:00",
+    "count": 8,
+    "data": {
+        "has_memo": true,
+        "text": "矢野哲也医師：第2土曜診察あり（その週の水曜は公休）\n　土曜診療　8/15、9/19、10/17、11/14、12/12\n　休診　　　7/21，7/22、8/12、9/7～9/9、10/14、11/11、12/9\n小野会全体会：毎月最終水曜日 13:00〜（胃腸科1F食堂）",
+        "lines": [
+            "矢野哲也医師：第2土曜診察あり（その週の水曜は公休）",
+            "土曜診療　8/15、9/19、10/17、11/14、12/12",
+            "休診　　　7/21，7/22、8/12、9/7～9/9、10/14、11/11、12/9",
+            "小野会全体会：毎月最終水曜日 13:00〜（胃腸科1F食堂）"
+        ],
+        "line_count": 4,
+        "char_count": 140,
+        "description": "メモ（自由記述）",
+        "updated_at": "2026-08-10T10:05:48+09:00",
+        "updated_at_display": "2026年8月10日 10:05"
+    }
+}</code></pre>
+
+            <h3 class="sub-title">テキスト形式レスポンス例 (<code>GET /api/memo.php?format=plain</code>)</h3>
+            <p>マイコン端末や電光掲示板、Unixパイプライン等で直接テキストとして処理する場合に便利です。</p>
+            <pre><code>矢野哲也医師：第2土曜診察あり（その週の水曜は公休）
+　土曜診療　8/15、9/19、10/17、11/14、12/12
+　休診　　　7/21，7/22、8/12、9/7～9/9、10/14、11/11、12/9
+小野会全体会：毎月最終水曜日 13:00〜（胃腸科1F食堂）</code></pre>
+        </section>
+
+        <!-- 6. iCalendar フィード -->
         <section class="spec-section" id="ep-feed">
-            <h2 class="section-title"><i class="fa-solid fa-calendar-plus" style="color:var(--primary);"></i> 5. iCalendar (.ics) カレンダー購読フィード</h2>
+            <h2 class="section-title"><i class="fa-solid fa-calendar-plus" style="color:var(--primary);"></i> 6. iCalendar (.ics) カレンダー購読フィード</h2>
             <div class="endpoint-banner">
                 <span class="method get" style="background:#e0f2fe;color:#0369a1;border-color:#7dd3fc;">iCal</span>
                 <span class="endpoint-path">/api/feed.php</span>
@@ -430,9 +491,9 @@
             </ul>
         </section>
 
-        <!-- 6. 実装サンプルコード -->
+        <!-- 7. 実装サンプルコード -->
         <section class="spec-section" id="api-samples">
-            <h2 class="section-title"><i class="fa-solid fa-terminal" style="color:var(--primary);"></i> 6. クライアント実装サンプルコード</h2>
+            <h2 class="section-title"><i class="fa-solid fa-terminal" style="color:var(--primary);"></i> 7. クライアント実装サンプルコード</h2>
 
             <h3 class="sub-title">JavaScript (Fetch API)</h3>
             <pre><code>// 今日の休診医師を取得して画面に表示する例
@@ -465,9 +526,9 @@ for event in data["data"]:
     print(f"{event['start_date']}: {event['doctor']['name']} - {event['title']}")</code></pre>
         </section>
 
-        <!-- 7. ステータスコード一覧 -->
+        <!-- 8. ステータスコード一覧 -->
         <section class="spec-section" id="api-codes">
-            <h2 class="section-title"><i class="fa-solid fa-circle-question" style="color:var(--primary);"></i> 7. ステータスコード一覧</h2>
+            <h2 class="section-title"><i class="fa-solid fa-circle-question" style="color:var(--primary);"></i> 8. ステータスコード一覧</h2>
             <table class="spec-table">
                 <thead><tr><th>コード</th><th>意味</th><th>説明</th></tr></thead>
                 <tbody>

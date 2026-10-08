@@ -215,8 +215,13 @@
             <h1><i class="fa-solid fa-code"></i> 医師予定表 REST API</h1>
             <p>電子カルテ、受付サイネージ、院内かわら版、外部グループウェア等で医師予定を利用するためのWeb APIです。</p>
         </div>
-        <div class="header-badge">
-            <i class="fa-solid fa-bolt"></i> CORS対応 &bull; JSON / iCal
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+            <a href="../仕様書/api_spec.html" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#059669;color:white;padding:7px 14px;border-radius:20px;font-size:0.82rem;font-weight:600;text-decoration:none;">
+                <i class="fa-solid fa-book-open"></i> API詳細仕様書 (HTML)
+            </a>
+            <div class="header-badge">
+                <i class="fa-solid fa-bolt"></i> CORS対応 &bull; JSON / iCal
+            </div>
         </div>
     </header>
 
@@ -365,7 +370,40 @@
         </div>
     </div>
 
-    <!-- 6. iCalendar (.ics) 自動購読フィード -->
+    <!-- 6. 申し送り・連絡メモ取得 API -->
+    <div class="api-card open" id="card-memo">
+        <div class="api-header" onclick="toggleCard('card-memo')">
+            <div class="api-method-endpoint">
+                <span class="method-badge method-get">GET</span>
+                <span class="endpoint-url">/api/memo.php</span>
+                <span class="endpoint-desc">連絡・申し送りメモ情報（院内告知・補足案内）</span>
+            </div>
+            <i class="fa-solid fa-chevron-down"></i>
+        </div>
+        <div class="api-body">
+            <p style="font-size:0.9rem;margin-bottom:12px;color:#475569;">
+                医師予定表の上部に常時掲出されている連絡・申し送りメモ（診察曜日の変更連絡や全体会案内等の自由記述）を取得します。
+                <code>format=plain</code> を指定することで、マイコン端末や電光掲示板、シェル等からそのまま出力できるテキスト形式での取得も可能です。
+            </p>
+            <table class="param-table">
+                <thead><tr><th>パラメータ</th><th>型</th><th>必須</th><th>説明</th></tr></thead>
+                <tbody>
+                    <tr><td class="param-name">format</td><td>string</td><td>任意</td><td>レスポンス形式 (<code>json</code> [デフォルト] または <code>plain</code> / <code>text</code>)</td></tr>
+                    <tr><td class="param-name">trim</td><td>integer</td><td>任意</td><td>空行の除外と前後余白トリム (<code>1</code> [デフォルト] または <code>0</code>)</td></tr>
+                </tbody>
+            </table>
+            <div class="try-box">
+                <div class="try-actions">
+                    <button class="try-btn" onclick="executeApi('memo.php', 'res-memo')"><i class="fa-solid fa-play"></i> 実行して試す (JSON)</button>
+                    <a href="memo.php" target="_blank" class="open-raw-link"><i class="fa-solid fa-arrow-up-right-from-square"></i> 新規タブで開く (JSON)</a>
+                    <a href="memo.php?format=plain" target="_blank" class="open-raw-link" style="margin-left:10px;"><i class="fa-solid fa-file-lines"></i> テキスト形式 (plain)</a>
+                </div>
+                <div class="response-preview" id="res-memo"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 7. iCalendar (.ics) 自動購読フィード -->
     <div class="api-card" id="card-feed">
         <div class="api-header" onclick="toggleCard('card-feed')">
             <div class="api-method-endpoint">
