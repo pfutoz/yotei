@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>医師予定表 外部連携 API 仕様書 - yotei</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-light: #eff6ff;
+            --success: #059669;
+            --success-light: #ecfdf5;
+            --warning: #d97706;
+            --danger: #dc2626;
+            --bg-body: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --radius: 12px;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background: var(--bg-body);
+            color: var(--text-main);
+            line-height: 1.7;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .spec-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* サイドバー */
+        .spec-sidebar {
+            width: 290px;
+            background: #ffffff;
+            border-right: 1px solid var(--border);
+            padding: 24px 16px;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+        .sidebar-brand {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--border);
+            text-decoration: none;
+        }
+        .sidebar-nav-group { margin-bottom: 20px; }
+        .sidebar-nav-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            padding-left: 8px;
+        }
+        .sidebar-nav-list { list-style: none; }
+        .sidebar-nav-item a {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 6px;
+            color: #475569;
+            font-size: 0.85rem;
+            text-decoration: none;
+            transition: all 0.15s;
+        }
+        .sidebar-nav-item a:hover {
+            background: var(--primary-light);
+            color: var(--primary);
+        }
+        .sidebar-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 1px 6px;
+            border-radius: 4px;
+            background: #e2e8f0;
+            color: #475569;
+        }
+        .sidebar-badge.get { background: #dcfce7; color: #166534; }
+
+        /* メインコンテンツ */
+        .spec-main {
+            flex: 1;
+            max-width: 980px;
+            padding: 36px 48px;
+        }
+
+        .spec-hero {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 32px 36px;
+            margin-bottom: 36px;
+        }
+        .spec-hero-tag {
+            display: inline-block;
+            background: #ecfdf5;
+            color: #059669;
+            font-size: 0.8rem;
+            font-weight: 700;
+            padding: 4px 12px;
+            border-radius: 20px;
+            margin-bottom: 12px;
+        }
+        .spec-hero h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-bottom: 8px;
+        }
+        .spec-hero p { color: var(--text-muted); font-size: 0.95rem; }
+
+        .spec-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 32px;
+            margin-bottom: 32px;
+        }
+        h2.section-title {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #0f172a;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        h3.sub-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin: 24px 0 12px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .endpoint-banner {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            padding: 12px 18px;
+            border-radius: 8px;
+            margin: 16px 0;
+        }
+        .method {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            font-weight: 800;
+            padding: 4px 10px;
+            border-radius: 6px;
+        }
+        .method.get { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+        .endpoint-path {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .spec-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.88rem;
+            margin: 14px 0 20px 0;
+        }
+        .spec-table th, .spec-table td {
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            text-align: left;
+        }
+        .spec-table th { background: #f8fafc; color: #475569; font-weight: 700; }
+
+        pre {
+            background: #0f172a;
+            color: #f8fafc;
+            padding: 16px;
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82rem;
+            overflow-x: auto;
+            margin: 12px 0 20px 0;
+            line-height: 1.5;
+        }
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85em;
+            background: #f1f5f9;
+            color: #2563eb;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .alert-box {
+            padding: 14px 18px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            margin: 16px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        .alert-info { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; }
+        .alert-success { background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; }
+
+        @media (max-width: 900px) {
+            .spec-layout { flex-direction: column; }
+            .spec-sidebar { width: 100%; height: auto; position: static; }
+            .spec-main { padding: 20px 16px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="spec-layout">
+
+    <!-- サイドバー -->
+    <aside class="spec-sidebar">
+        <a href="index.html" class="sidebar-brand">
+            <i class="fa-solid fa-code"></i> yotei API 仕様書
+        </a>
+
+        <div class="sidebar-nav-group">
+            <div class="sidebar-nav-title">基本仕様</div>
+            <ul class="sidebar-nav-list">
+                <li class="sidebar-nav-item"><a href="#api-intro"><i class="fa-solid fa-angle-right"></i> 通信規約・CORS</a></li>
+                <li class="sidebar-nav-item"><a href="#api-format"><i class="fa-solid fa-angle-right"></i> レスポンスフォーマット</a></li>
+            </ul>
+        </div>
+
+        <div class="sidebar-nav-group">
+            <div class="sidebar-nav-title">エンドポイント一覧</div>
+            <ul class="sidebar-nav-list">
+                <li class="sidebar-nav-item"><a href="#ep-today"><span class="sidebar-badge get">GET</span> /api/today.php</a></li>
+                <li class="sidebar-nav-item"><a href="#ep-events"><span class="sidebar-badge get">GET</span> /api/events.php</a></li>
+                <li class="sidebar-nav-item"><a href="#ep-doctors"><span class="sidebar-badge get">GET</span> /api/doctors.php</a></li>
+                <li class="sidebar-nav-item"><a href="#ep-departments"><span class="sidebar-badge get">GET</span> /api/departments.php</a></li>
+                <li class="sidebar-nav-item"><a href="#ep-meetings"><span class="sidebar-badge get">GET</span> /api/meetings.php</a></li>
+                <li class="sidebar-nav-item"><a href="#ep-feed"><span class="sidebar-badge get" style="background:#e0f2fe;color:#0369a1;">iCal</span> /api/feed.php</a></li>
+            </ul>
+        </div>
+
+        <div class="sidebar-nav-group">
+            <div class="sidebar-nav-title">実装サンプル</div>
+            <ul class="sidebar-nav-list">
+                <li class="sidebar-nav-item"><a href="#api-samples"><i class="fa-solid fa-angle-right"></i> コードサンプル (JS/Py/PHP)</a></li>
+                <li class="sidebar-nav-item"><a href="#api-codes"><i class="fa-solid fa-angle-right"></i> ステータスコード一覧</a></li>
+            </ul>
+        </div>
+
+        <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border);">
+            <a href="system_spec.html" style="font-size:0.85rem;color:var(--primary);text-decoration:none;font-weight:700;">
+                <i class="fa-solid fa-laptop-code"></i> プログラム仕様書はこちら &rarr;
+            </a>
+        </div>
+    </aside>
+
+    <!-- メインコンテンツ -->
+    <main class="spec-main">
+
+        <div class="spec-hero">
+            <span class="spec-hero-tag">REST API &bull; iCalendar Feed</span>
+            <h1>外部システム連携 API 仕様書</h1>
+            <p>電子カルテ端末、受付案内サイネージ、院内かわら版システム、外部グループウェア、Googleカレンダー等と予定データを連携するためのAPI仕様書です。</p>
+        </div>
+
+        <!-- 1. 通信規約・共通フォーマット -->
+        <section class="spec-section" id="api-intro">
+            <h2 class="section-title"><i class="fa-solid fa-sliders" style="color:var(--primary);"></i> 1. 通信規約・共通仕様</h2>
+
+            <table class="spec-table">
+                <tr><th>ベースURL</th><td><code>http://[サーバーホスト]/yotei/api/</code></td></tr>
+                <tr><th>通信プロトコル</th><td>HTTP / HTTPS (GET メソッド中心)</td></tr>
+                <tr><th>データ形式</th><td>JSON (UTF-8, <code>application/json; charset=utf-8</code>) / iCalendar (RFC 5545)</td></tr>
+                <tr><th>CORS対応</th><td><code>Access-Control-Allow-Origin: *</code>（院内別システムからのAjax通信可能）</td></tr>
+                <tr><th>インタラクティブコンソール</th><td><a href="../api/index.php" target="_blank" style="color:var(--primary);font-weight:600;">http://[サーバーホスト]/yotei/api/index.php</a></td></tr>
+            </table>
+
+            <div id="api-format" style="margin-top:20px;">
+                <h3 class="sub-title">1.1 統一JSONレスポンス形式</h3>
+                <p>すべてのJSON APIは以下のエンベロープ形式で返却されます。</p>
+                <pre><code>{
+    "status": "success",          // 処理結果 ("success" または "error")
+    "code": 200,                  // HTTPステータスコード
+    "timestamp": "2026-10-08T23:13:17+09:00", // 応答日時 (ISO 8601)
+    "count": 5,                   // 返却データ件数
+    "meta": { ... },              // 検索条件等の付帯情報 (任意)
+    "data": [ ... ]               // 実際のデータ配列またはオブジェクト
+}</code></pre>
+            </div>
+        </section>
+
+        <!-- 2. 本日サマリーAPI -->
+        <section class="spec-section" id="ep-today">
+            <h2 class="section-title"><i class="fa-solid fa-tv" style="color:var(--primary);"></i> 2. 本日サマリー API</h2>
+            <div class="endpoint-banner">
+                <span class="method get">GET</span>
+                <span class="endpoint-path">/api/today.php</span>
+            </div>
+            <p><strong>用途:</strong> 病院受付の案内ディスプレイ、サイネージ、かわら版トップページウィジェット等に最適な、当日の医師休診・不在状況、診察予定、全体会情報を一括取得するAPI。</p>
+
+            <h3 class="sub-title">リクエストパラメータ</h3>
+            <table class="spec-table">
+                <thead><tr><th>パラメータ名</th><th>型</th><th>必須</th><th>デフォルト</th><th>説明</th></tr></thead>
+                <tbody>
+                    <tr><td><code>date</code></td><td>string</td><td>任意</td><td>today</td><td>対象日 (<code>YYYY-MM-DD</code>, <code>today</code>, <code>tomorrow</code>)</td></tr>
+                </tbody>
+            </table>
+
+            <h3 class="sub-title">レスポンス例</h3>
+            <pre><code>{
+    "status": "success",
+    "code": 200,
+    "timestamp": "2026-10-08T23:13:17+09:00",
+    "count": 1,
+    "data": {
+        "target_date": "2026-10-24",
+        "weekday": "土",
+        "date_display": "2026年10月24日（土）",
+        "is_hospital_closed": false,
+        "holiday_name": "",
+        "summary": {
+            "absent_count": 1,
+            "clinic_count": 0,
+            "other_count": 0,
+            "total_events": 1,
+            "has_all_meeting": false
+        },
+        "absent_doctors": [
+            {
+                "id": 107,
+                "doctor_id": 2,
+                "doctor_name": "小野二三雄",
+                "doctor_short": "二三雄",
+                "department_name": "肛門科",
+                "department_color": "#E8833A",
+                "title": "二三雄医師 休診",
+                "event_type": "absence",
+                "event_type_label": "休診・不在",
+                "event_icon": "🔴",
+                "time": "終日"
+            }
+        ],
+        "clinic_doctors": [],
+        "all_meeting": null
+    }
+}</code></pre>
+        </section>
+
+        <!-- 3. 予定一覧API -->
+        <section class="spec-section" id="ep-events">
+            <h2 class="section-title"><i class="fa-solid fa-calendar-days" style="color:var(--primary);"></i> 3. 予定一覧・期間検索 API</h2>
+            <div class="endpoint-banner">
+                <span class="method get">GET</span>
+                <span class="endpoint-path">/api/events.php</span>
+            </div>
+            <p><strong>用途:</strong> 電子カルテや院内グループウェア、週間カレンダー画面向けの柔軟な予定検索API。</p>
+
+            <h3 class="sub-title">リクエストパラメータ</h3>
+            <table class="spec-table">
+                <thead><tr><th>パラメータ名</th><th>型</th><th>必須</th><th>デフォルト</th><th>説明</th></tr></thead>
+                <tbody>
+                    <tr><td><code>start_date</code></td><td>string</td><td>任意</td><td>当月初日</td><td>期間開始日 (<code>YYYY-MM-DD</code>)</td></tr>
+                    <tr><td><code>end_date</code></td><td>string</td><td>任意</td><td>翌月末日</td><td>期間終了日 (<code>YYYY-MM-DD</code>)</td></tr>
+                    <tr><td><code>date</code></td><td>string</td><td>任意</td><td>なし</td><td>単一日指定 (指定時はstart/endを上書き)</td></tr>
+                    <tr><td><code>doctor_id</code></td><td>integer</td><td>任意</td><td>なし</td><td>特定医師IDで絞り込み</td></tr>
+                    <tr><td><code>department_id</code></td><td>integer</td><td>任意</td><td>なし</td><td>部門IDで絞り込み</td></tr>
+                    <tr><td><code>event_type</code></td><td>string</td><td>任意</td><td>なし</td><td>種別 (<code>absence</code>, <code>clinic</code>, <code>meeting</code>, <code>business_trip</code>)</td></tr>
+                    <tr><td><code>expand_period</code></td><td>integer</td><td>任意</td><td>0</td><td><code>1</code> 指定時、複数日にまたがる期間予定を日別に分割展開して返却</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- 4. マスタ・全体会API -->
+        <section class="spec-section" id="ep-doctors">
+            <h2 class="section-title"><i class="fa-solid fa-database" style="color:var(--primary);"></i> 4. マスタ・全体会 API</h2>
+
+            <h3 class="sub-title" id="ep-doctors-sub">4.1 医師マスタ API (<code>GET /api/doctors.php</code>)</h3>
+            <p>有効な医師一覧（ID、氏名、略称、役職、所属部門、カラーコード）を返却。</p>
+
+            <h3 class="sub-title" id="ep-departments">4.2 部門マスタ API (<code>GET /api/departments.php</code>)</h3>
+            <p>部門一覧（ID、コード、名称、カラーコード）を返却。</p>
+
+            <h3 class="sub-title" id="ep-meetings">4.3 小野会全体会日程 API (<code>GET /api/meetings.php</code>)</h3>
+            <p>全体会の開催予定一覧。パラメータ: <code>year</code> (年数値), <code>month</code> (月数値)。</p>
+        </section>
+
+        <!-- 5. iCalendar フィード -->
+        <section class="spec-section" id="ep-feed">
+            <h2 class="section-title"><i class="fa-solid fa-calendar-plus" style="color:var(--primary);"></i> 5. iCalendar (.ics) カレンダー購読フィード</h2>
+            <div class="endpoint-banner">
+                <span class="method get" style="background:#e0f2fe;color:#0369a1;border-color:#7dd3fc;">iCal</span>
+                <span class="endpoint-path">/api/feed.php</span>
+            </div>
+            <p>
+                <strong>カレンダー自動同期:</strong> Googleカレンダー、Outlook、iPhone、Androidのカレンダーアプリに本URLを「Webカレンダー購読」として登録するだけで、医師予定が端末のカレンダーに自動同期されます。
+            </p>
+            <ul>
+                <li><strong>URL例:</strong> <code>http://[サーバーホスト]/yotei/api/feed.php</code></li>
+                <li><strong>特定医師のみ購読:</strong> <code>http://[サーバーホスト]/yotei/api/feed.php?doctor_id=2</code></li>
+                <li><strong>規格:</strong> RFC 5545 iCalendar (終日予定・時間指定予定・全体会を網羅)</li>
+            </ul>
+        </section>
+
+        <!-- 6. 実装サンプルコード -->
+        <section class="spec-section" id="api-samples">
+            <h2 class="section-title"><i class="fa-solid fa-terminal" style="color:var(--primary);"></i> 6. クライアント実装サンプルコード</h2>
+
+            <h3 class="sub-title">JavaScript (Fetch API)</h3>
+            <pre><code>// 今日の休診医師を取得して画面に表示する例
+fetch('http://[サーバーホスト]/yotei/api/today.php')
+    .then(response => response.json())
+    .then(res => {
+        if (res.status === 'success') {
+            console.log('本日の休診人数:', res.data.summary.absent_count);
+            res.data.absent_doctors.forEach(doc => {
+                console.log(`🔴 [${doc.department_name}] ${doc.doctor_name}: ${doc.title} (${doc.time})`);
+            });
+        }
+    })
+    .catch(error => console.error('通信エラー:', error));</code></pre>
+
+            <h3 class="sub-title">Python</h3>
+            <pre><code>import requests
+
+url = "http://[サーバーホスト]/yotei/api/events.php"
+params = {
+    "start_date": "2026-10-01",
+    "end_date": "2026-10-31",
+    "event_type": "absence"
+}
+
+res = requests.get(url, params=params)
+data = res.json()
+
+for event in data["data"]:
+    print(f"{event['start_date']}: {event['doctor']['name']} - {event['title']}")</code></pre>
+        </section>
+
+        <!-- 7. ステータスコード一覧 -->
+        <section class="spec-section" id="api-codes">
+            <h2 class="section-title"><i class="fa-solid fa-circle-question" style="color:var(--primary);"></i> 7. ステータスコード一覧</h2>
+            <table class="spec-table">
+                <thead><tr><th>コード</th><th>意味</th><th>説明</th></tr></thead>
+                <tbody>
+                    <tr><td><code>200 OK</code></td><td>成功</td><td>リクエストが正常に処理され、データが返却された。</td></tr>
+                    <tr><td><code>400 Bad Request</code></td><td>リクエスト不正</td><td>パラメータの日付フォーマットや指定形式が不正。</td></tr>
+                    <tr><td><code>404 Not Found</code></td><td>見つからない</td><td>指定されたエンドポイントまたはデータが存在しない。</td></tr>
+                    <tr><td><code>500 Server Error</code></td><td>内部エラー</td><td>データベース接続エラー等のサーバー内部例外。</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+    </main>
+
+</div>
+
+</body>
+</html>

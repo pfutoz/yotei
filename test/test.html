@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>カレンダー期間予定 帯表示イメージ v2</title>
+    <style>
+        /* ============================================================
+           スタイル（カレンダー帯表示イメージ v2）
+           ============================================================ */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background: #f0f4f8;
+            padding: 24px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            max-width: 720px;
+            width: 100%;
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        .calendar-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a2a3a;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+        .calendar-sub {
+            font-size: 13px;
+            color: #64748b;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        /* カレンダーテーブル */
+        .calendar-table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+        .calendar-table th {
+            padding: 8px 0;
+            font-size: 12px;
+            font-weight: 600;
+            color: #8a9aa8;
+            text-align: center;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .calendar-table th.sun { color: #dc2626; }
+        .calendar-table th.sat { color: #2563eb; }
+
+        .calendar-table td {
+            height: 85px;
+            padding: 4px 3px;
+            border: 1px solid #e2e8f0;
+            vertical-align: top;
+            font-size: 12px;
+            position: relative;
+        }
+        .calendar-table td.calendar-empty {
+            background: #fafafa;
+        }
+        .calendar-table td .day-number {
+            font-weight: 600;
+            font-size: 13px;
+            color: #1a2a3a;
+            display: inline-block;
+            margin-bottom: 2px;
+        }
+        .calendar-table td.sun .day-number { color: #dc2626; }
+        .calendar-table td.sat .day-number { color: #2563eb; }
+        .calendar-table td.today .day-number {
+            background: #2563eb;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            text-align: center;
+            line-height: 24px;
+            display: inline-block;
+        }
+
+        /* ============================================================
+           期間予定 帯表示（v2：丸み強調・中間の｜削除）
+           ============================================================ */
+        .event-period {
+            padding: 3px 6px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            line-height: 1.4;
+        }
+        .event-period:hover {
+            transform: scale(1.04);
+            z-index: 10;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+
+        /* ---- 休診（赤） ---- */
+        .event-period-absence {
+            background: #fef2f2;
+            color: #991b1b;
+        }
+        .event-period-absence.event-period-start {
+            border-radius: 10px 0 0 10px;
+            border-left: 4px solid #dc2626;
+            margin-left: 2px;
+            box-shadow: -2px 0 10px rgba(220, 38, 38, 0.12), 0 1px 4px rgba(220, 38, 38, 0.1);
+        }
+        .event-period-absence.event-period-end {
+            border-radius: 0 10px 10px 0;
+            border-right: 4px solid #dc2626;
+            margin-right: 2px;
+            box-shadow: 2px 0 10px rgba(220, 38, 38, 0.12), 0 1px 4px rgba(220, 38, 38, 0.1);
+        }
+        .event-period-absence.event-period-middle {
+            border-left: none;
+            border-right: none;
+            border-radius: 0;
+            margin-left: 0;
+            margin-right: 0;
+            box-shadow: none;
+            background: #fef2f2;
+        }
+        .event-period-absence.event-period-single {
+            border-radius: 10px;
+            border-left: 4px solid #dc2626;
+            border-right: 4px solid #dc2626;
+            box-shadow: 0 1px 10px rgba(220, 38, 38, 0.15);
+        }
+        .event-period-absence:hover {
+            background: #fee2e2;
+            box-shadow: 0 2px 16px rgba(220, 38, 38, 0.25);
+        }
+
+        /* ---- 診察（緑） ---- */
+        .event-period-clinic {
+            background: #f0fdf4;
+            color: #166534;
+        }
+        .event-period-clinic.event-period-start {
+            border-radius: 10px 0 0 10px;
+            border-left: 4px solid #22c55e;
+            margin-left: 2px;
+            box-shadow: -2px 0 10px rgba(34, 197, 94, 0.12), 0 1px 4px rgba(34, 197, 94, 0.1);
+        }
+        .event-period-clinic.event-period-end {
+            border-radius: 0 10px 10px 0;
+            border-right: 4px solid #22c55e;
+            margin-right: 2px;
+            box-shadow: 2px 0 10px rgba(34, 197, 94, 0.12), 0 1px 4px rgba(34, 197, 94, 0.1);
+        }
+        .event-period-clinic.event-period-middle {
+            border-left: none;
+            border-right: none;
+            border-radius: 0;
+            margin-left: 0;
+            margin-right: 0;
+            box-shadow: none;
+            background: #f0fdf4;
+        }
+        .event-period-clinic.event-period-single {
+            border-radius: 10px;
+            border-left: 4px solid #22c55e;
+            border-right: 4px solid #22c55e;
+            box-shadow: 0 1px 10px rgba(34, 197, 94, 0.15);
+        }
+        .event-period-clinic:hover {
+            background: #dcfce7;
+            box-shadow: 0 2px 16px rgba(34, 197, 94, 0.25);
+        }
+
+        /* ---- 会議（黄） ---- */
+        .event-period-meeting {
+            background: #fffbeb;
+            color: #854d0e;
+        }
+        .event-period-meeting.event-period-start {
+            border-radius: 10px 0 0 10px;
+            border-left: 4px solid #eab308;
+            margin-left: 2px;
+            box-shadow: -2px 0 10px rgba(234, 179, 8, 0.12), 0 1px 4px rgba(234, 179, 8, 0.1);
+        }
+        .event-period-meeting.event-period-end {
+            border-radius: 0 10px 10px 0;
+            border-right: 4px solid #eab308;
+            margin-right: 2px;
+            box-shadow: 2px 0 10px rgba(234, 179, 8, 0.12), 0 1px 4px rgba(234, 179, 8, 0.1);
+        }
+        .event-period-meeting.event-period-middle {
+            border-left: none;
+            border-right: none;
+            border-radius: 0;
+            margin-left: 0;
+            margin-right: 0;
+            box-shadow: none;
+            background: #fffbeb;
+        }
+        .event-period-meeting.event-period-single {
+            border-radius: 10px;
+            border-left: 4px solid #eab308;
+            border-right: 4px solid #eab308;
+            box-shadow: 0 1px 10px rgba(234, 179, 8, 0.15);
+        }
+        .event-period-meeting:hover {
+            background: #fef3c7;
+            box-shadow: 0 2px 16px rgba(234, 179, 8, 0.25);
+        }
+
+        /* ---- 通常予定（期間ではない） ---- */
+        .event-chip {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            background: #f1f5f9;
+            color: #475569;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .event-chip:hover {
+            transform: scale(1.04);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .event-chip.absence { background: #fef2f2; color: #991b1b; }
+        .event-chip.clinic { background: #f0fdf4; color: #166534; }
+        .event-chip.meeting { background: #fffbeb; color: #854d0e; }
+
+        /* 予定が2件以上ある場合の「+n件」 */
+        .event-more {
+            font-size: 9px;
+            color: #94a3b8;
+            padding: 1px 4px;
+            background: #f1f5f9;
+            border-radius: 3px;
+            display: inline-block;
+        }
+
+        /* 凡例 */
+        .legend {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            padding: 12px 0 4px 0;
+            font-size: 12px;
+            color: #64748b;
+            border-top: 1px solid #e2e8f0;
+            margin-top: 16px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .legend-item .dot {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border-radius: 3px;
+        }
+        .legend-item .dot-red { background: #fef2f2; border: 2px solid #dc2626; }
+        .legend-item .dot-green { background: #f0fdf4; border: 2px solid #22c55e; }
+        .legend-item .dot-yellow { background: #fffbeb; border: 2px solid #eab308; }
+        .legend-item .dot-period {
+            width: 30px;
+            height: 14px;
+            background: #fef2f2;
+            border-left: 4px solid #dc2626;
+            border-right: 4px solid #dc2626;
+            border-radius: 0;
+        }
+
+        .note {
+            font-size: 12px;
+            color: #94a3b8;
+            margin-top: 12px;
+            text-align: center;
+            background: #f8fafc;
+            padding: 10px 12px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+        }
+        .note strong { color: #1a2a3a; }
+        .note .highlight-red { color: #dc2626; font-weight: 600; }
+        .note .highlight-green { color: #22c55e; font-weight: 600; }
+        .note .highlight-yellow { color: #eab308; font-weight: 600; }
+
+        @media (max-width: 600px) {
+            .container { padding: 12px; }
+            .calendar-table td { height: 70px; padding: 2px 2px; font-size: 10px; }
+            .event-period { font-size: 9px; padding: 2px 4px; }
+            .event-chip { font-size: 8px; padding: 1px 4px; }
+            .calendar-table td .day-number { font-size: 11px; }
+            .event-period-absence.event-period-start { border-radius: 6px 0 0 6px; }
+            .event-period-absence.event-period-end { border-radius: 0 6px 6px 0; }
+            .event-period-clinic.event-period-start { border-radius: 6px 0 0 6px; }
+            .event-period-clinic.event-period-end { border-radius: 0 6px 6px 0; }
+            .event-period-meeting.event-period-start { border-radius: 6px 0 0 6px; }
+            .event-period-meeting.event-period-end { border-radius: 0 6px 6px 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="calendar-title">📅 2026年9月 期間予定 帯表示イメージ</div>
+        <div class="calendar-sub">▼ 開始・終了が <strong>丸く強調</strong> され、中間は <strong>｜なし</strong> で帯が繋がっているように見えます</div>
+
+        <table class="calendar-table">
+            <thead>
+                <tr>
+                    <th class="sun">日</th>
+                    <th>月</th>
+                    <th>火</th>
+                    <th>水</th>
+                    <th>木</th>
+                    <th>金</th>
+                    <th class="sat">土</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- 1週目 -->
+                <tr>
+                    <td class="calendar-empty"></td>
+                    <td><span class="day-number">1</span></td>
+                    <td><span class="day-number">2</span></td>
+                    <td><span class="day-number">3</span></td>
+                    <td><span class="day-number">4</span></td>
+                    <td><span class="day-number">5</span></td>
+                    <td><span class="day-number sat">6</span></td>
+                </tr>
+                <!-- 2週目（期間予定 9/7〜9/9 休診・赤） -->
+                <tr>
+                    <td><span class="day-number sun">7</span>
+                        <!-- ★ 開始（左端を大きく丸く） -->
+                        <div class="event-period event-period-absence event-period-start" title="9/7〜9/9 休診">
+                            🔴 休診（9/7〜9/9）
+                        </div>
+                    </td>
+                    <td><span class="day-number">8</span>
+                        <!-- ★ 中間（｜なし・帯が繋がっている） -->
+                        <div class="event-period event-period-absence event-period-middle" title="9/7〜9/9 休診">
+                            🔴 休診（9/7〜9/9）
+                        </div>
+                    </td>
+                    <td><span class="day-number">9</span>
+                        <!-- ★ 終了（右端を大きく丸く） -->
+                        <div class="event-period event-period-absence event-period-end" title="9/7〜9/9 休診">
+                            🔴 休診（9/7〜9/9）
+                        </div>
+                        <!-- 通常予定と共存 -->
+                        <div class="event-chip meeting">🟡 会議 13:00</div>
+                    </td>
+                    <td><span class="day-number">10</span></td>
+                    <td><span class="day-number">11</span></td>
+                    <td><span class="day-number">12</span></td>
+                    <td><span class="day-number sat">13</span>
+                        <!-- 診察の期間予定（緑）単日 -->
+                        <div class="event-period event-period-clinic event-period-single" title="9/13 診察（第2土曜）">
+                            🟢 診察（第2土曜）
+                        </div>
+                    </td>
+                </tr>
+                <!-- 3週目 -->
+                <tr>
+                    <td><span class="day-number sun">14</span></td>
+                    <td><span class="day-number">15</span>
+                        <div class="event-chip absence">🔴 休診</div>
+                    </td>
+                    <td><span class="day-number">16</span></td>
+                    <td><span class="day-number">17</span>
+                        <!-- 会議の期間予定（黄） 9/17〜9/18 -->
+                        <div class="event-period event-period-meeting event-period-start" title="9/17〜9/18 全体会">
+                            🟡 全体会（9/17〜9/18）
+                        </div>
+                    </td>
+                    <td><span class="day-number">18</span>
+                        <div class="event-period event-period-meeting event-period-end" title="9/17〜9/18 全体会">
+                            🟡 全体会（9/17〜9/18）
+                        </div>
+                    </td>
+                    <td><span class="day-number">19</span></td>
+                    <td><span class="day-number sat">20</span></td>
+                </tr>
+                <!-- 4週目 -->
+                <tr>
+                    <td><span class="day-number sun">21</span></td>
+                    <td><span class="day-number">22</span></td>
+                    <td><span class="day-number">23</span></td>
+                    <td><span class="day-number">24</span></td>
+                    <td><span class="day-number">25</span></td>
+                    <td><span class="day-number">26</span></td>
+                    <td><span class="day-number sat">27</span></td>
+                </tr>
+                <!-- 5週目 -->
+                <tr>
+                    <td><span class="day-number sun">28</span></td>
+                    <td><span class="day-number">29</span></td>
+                    <td><span class="day-number">30</span></td>
+                    <td class="calendar-empty"></td>
+                    <td class="calendar-empty"></td>
+                    <td class="calendar-empty"></td>
+                    <td class="calendar-empty"></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- 凡例 -->
+        <div class="legend">
+            <span style="font-weight:600;">📌 凡例</span>
+            <span class="legend-item"><span class="dot dot-red"></span> 休診（期間）</span>
+            <span class="legend-item"><span class="dot dot-green"></span> 診察（期間）</span>
+            <span class="legend-item"><span class="dot dot-yellow"></span> 会議（期間）</span>
+            <span class="legend-item"><span class="dot dot-period"></span> 期間予定（帯表示）</span>
+            <span class="legend-item" style="color:#94a3b8;">🔴 通常予定</span>
+        </div>
+
+        <div class="note">
+            💡 <strong>期間予定</strong> は <strong>帯状</strong> に表示されます。<br>
+            <span class="highlight-red">● 開始日（左端）</span> と <span class="highlight-red">● 終了日（右端）</span> は <strong>大きく丸く強調</strong> され、<br>
+            <span class="highlight-green">● 中間の日</span> は <strong>｜なし</strong> で帯が繋がっているように見えます。<br>
+            <span style="color:#94a3b8;">マウスオーバーで拡大・影が付きます。</span>
+        </div>
+    </div>
+</body>
+</html>

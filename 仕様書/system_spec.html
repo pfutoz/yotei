@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>医師予定表管理システム プログラム仕様書 - yotei</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-light: #eff6ff;
+            --primary-dark: #1d4ed8;
+            --secondary: #64748b;
+            --success: #059669;
+            --warning: #d97706;
+            --danger: #dc2626;
+            --bg-body: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --radius: 12px;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background: var(--bg-body);
+            color: var(--text-main);
+            line-height: 1.7;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* 2カラムレイアウト（左固定サイドバー + 右メインコンテンツ） */
+        .spec-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* サイドバー目次 */
+        .spec-sidebar {
+            width: 280px;
+            background: #ffffff;
+            border-right: 1px solid var(--border);
+            padding: 24px 16px;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+        .sidebar-brand {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--border);
+            text-decoration: none;
+        }
+        .sidebar-nav-group {
+            margin-bottom: 20px;
+        }
+        .sidebar-nav-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            padding-left: 8px;
+        }
+        .sidebar-nav-list {
+            list-style: none;
+        }
+        .sidebar-nav-item a {
+            display: block;
+            padding: 6px 12px;
+            border-radius: 6px;
+            color: #475569;
+            font-size: 0.85rem;
+            text-decoration: none;
+            transition: all 0.15s;
+        }
+        .sidebar-nav-item a:hover {
+            background: var(--primary-light);
+            color: var(--primary);
+        }
+
+        /* メインコンテンツ */
+        .spec-main {
+            flex: 1;
+            max-width: 980px;
+            padding: 36px 48px;
+        }
+
+        .spec-hero {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 32px 36px;
+            margin-bottom: 36px;
+        }
+        .spec-hero-tag {
+            display: inline-block;
+            background: var(--primary-light);
+            color: var(--primary);
+            font-size: 0.8rem;
+            font-weight: 700;
+            padding: 4px 12px;
+            border-radius: 20px;
+            margin-bottom: 12px;
+        }
+        .spec-hero h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-bottom: 8px;
+        }
+        .spec-hero p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        /* セクション見出し */
+        .spec-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 32px;
+            margin-bottom: 32px;
+        }
+        h2.section-title {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #0f172a;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        h3.sub-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin: 24px 0 12px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        p { margin-bottom: 14px; font-size: 0.93rem; color: #334155; }
+        ul, ol { margin-left: 20px; margin-bottom: 16px; font-size: 0.92rem; color: #334155; }
+        li { margin-bottom: 6px; }
+
+        /* テーブル */
+        .spec-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.88rem;
+            margin: 16px 0 24px 0;
+        }
+        .spec-table th, .spec-table td {
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            text-align: left;
+        }
+        .spec-table th {
+            background: #f8fafc;
+            color: #475569;
+            font-weight: 700;
+        }
+
+        /* コードブロック・コールアウト */
+        pre {
+            background: #0f172a;
+            color: #f8fafc;
+            padding: 16px;
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            overflow-x: auto;
+            margin: 14px 0 20px 0;
+        }
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85em;
+            background: #f1f5f9;
+            color: #2563eb;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .alert-box {
+            padding: 16px 18px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            margin: 16px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        .alert-info { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; }
+        .alert-success { background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; }
+        .alert-warning { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
+
+        /* 画面遷移図（CSSボックスダイアグラム） */
+        .diagram-container {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .diagram-flow {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .diagram-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .diagram-node {
+            background: white;
+            border: 2px solid var(--primary);
+            color: var(--text-main);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            box-shadow: var(--shadow-sm);
+        }
+        .diagram-node.admin { border-color: #7c3aed; background: #faf5ff; }
+        .diagram-arrow { color: #94a3b8; font-weight: 700; }
+
+        @media (max-width: 900px) {
+            .spec-layout { flex-direction: column; }
+            .spec-sidebar { width: 100%; height: auto; position: static; }
+            .spec-main { padding: 20px 16px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="spec-layout">
+
+    <!-- サイドバー目次 -->
+    <aside class="spec-sidebar">
+        <a href="index.html" class="sidebar-brand">
+            <i class="fa-solid fa-book-bookmark"></i> yotei 仕様書
+        </a>
+
+        <div class="sidebar-nav-group">
+            <div class="sidebar-nav-title">全体構成</div>
+            <ul class="sidebar-nav-list">
+                <li class="sidebar-nav-item"><a href="#sec-1"><i class="fa-solid fa-angle-right"></i> 1. システム概要・目的</a></li>
+                <li class="sidebar-nav-item"><a href="#sec-2"><i class="fa-solid fa-angle-right"></i> 2. 動作環境・DB構成</a></li>
+                <li class="sidebar-nav-item"><a href="#sec-3"><i class="fa-solid fa-angle-right"></i> 3. 認証・端末固定仕様</a></li>
+                <li class="sidebar-nav-item"><a href="#sec-4"><i class="fa-solid fa-angle-right"></i> 4. 画面一覧・画面遷移図</a></li>
+            </ul>
+        </div>
+
+        <div class="sidebar-nav-group">
+            <div class="sidebar-nav-title">各画面詳細仕様</div>
+            <ul class="sidebar-nav-list">
+                <li class="sidebar-nav-item"><a href="#sec-5-1"><i class="fa-solid fa-angle-right"></i> 5.1 ポータル (index.php)</a></li>
+                <li class="sidebar-nav-item"><a href="#sec-5-2"><i class="fa-solid fa-angle-right"></i> 5.2 予定一覧 (yotei_list.php)</a></li>
+                <li class="sidebar-nav-item"><a href="#sec-5-3"><i class="fa-solid fa-angle-right"></i> 5.3 カレンダー (calendar.php)</a></li>
+                <li class="sidebar-nav-item"><a href="#sec-5-4"><i class="fa-solid fa-angle-right"></i> 5.4 予定登録 (input.php)</a></li>
+                <li class="sidebar-nav-item"><a href="#sec-5-5"><i class="fa-solid fa-angle-right"></i> 5.5 マスター管理 (master/)</a></li>
+            </ul>
+        </div>
+
+        <div class="sidebar-nav-group">
+            <div class="sidebar-nav-title">データ設計</div>
+            <ul class="sidebar-nav-list">
+                <li class="sidebar-nav-item"><a href="#sec-6"><i class="fa-solid fa-angle-right"></i> 6. データベース設計</a></li>
+                <li class="sidebar-nav-item"><a href="#sec-7"><i class="fa-solid fa-angle-right"></i> 7. セキュリティ・保守方針</a></li>
+            </ul>
+        </div>
+
+        <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border);">
+            <a href="api_spec.html" style="font-size:0.85rem;color:var(--primary);text-decoration:none;font-weight:700;">
+                <i class="fa-solid fa-network-wired"></i> API 仕様書はこちら &rarr;
+            </a>
+        </div>
+    </aside>
+
+    <!-- メインコンテンツ -->
+    <main class="spec-main">
+
+        <!-- ヒーロー -->
+        <div class="spec-hero">
+            <span class="spec-hero-tag">PROGRAM SPECIFICATION</span>
+            <h1>医師予定表管理システム 仕様書</h1>
+            <p>システム名称: 医療法人小野会 医師予定表管理システム (yotei) &bull; バージョン: v2.0 &bull; 発行日: 2026年10月8日</p>
+        </div>
+
+        <!-- 1. システム概要・目的 -->
+        <section class="spec-section" id="sec-1">
+            <h2 class="section-title"><i class="fa-solid fa-bullseye" style="color:var(--primary);"></i> 1. システム概要・目的</h2>
+            <p>
+                本システムは、医療法人小野会に所属する医師の日常的な診察予定、休診・不在、出張・学会、および定期的な「小野会全体会」の日程を一元的に管理し、院内スタッフおよび関連業務システム（電子カルテ、受付サイネージ、院内かわら版等）へリアルタイムに情報共有することを目的としたWebシステムです。
+            </p>
+            <div class="alert-box alert-success">
+                <i class="fa-solid fa-check-circle" style="font-size:1.2rem;margin-top:2px;"></i>
+                <div>
+                    <strong>v2.0 改定の主要ポイント:</strong><br>
+                    1. <strong>かわら版システムとの完全統合認証</strong>（ワンタップログイン ＆ スマホ端末180日自動固定）<br>
+                    2. <strong>Googleカレンダー風の「週またぎ帯（マルチデイバー）」カレンダー</strong>の導入<br>
+                    3. <strong>過去予定の視認性改善</strong>（濃色スレートグレー ＆ ⏳過去バッジの明示）<br>
+                    4. <strong>マスター管理の安全な管理者パスワード認証化</strong>（ソース内固定書ききりの完全撤廃）
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. 動作環境・DB構成 -->
+        <section class="spec-section" id="sec-2">
+            <h2 class="section-title"><i class="fa-solid fa-server" style="color:var(--primary);"></i> 2. 動作環境・アーキテクチャ</h2>
+            
+            <h3 class="sub-title">2.1 サーバー・実行環境</h3>
+            <table class="spec-table">
+                <tr><th>Webサーバー</th><td>Apache 2.4 (Win64)</td></tr>
+                <tr><th>言語・ランタイム</th><td>PHP 8.5+ (PDO PostgreSQL 拡張)</td></tr>
+                <tr><th>データベース</th><td>PostgreSQL 15 (UTF-8)</td></tr>
+                <tr><th>クライアント推奨環境</th><td>Google Chrome, Safari, Microsoft Edge, iPad Safari (最新版)</td></tr>
+            </table>
+
+            <h3 class="sub-title">2.2 データベース連携構成</h3>
+            <p>本システムは単一のPostgreSQLインスタンス上で、以下の2つのデータベースと連携します。</p>
+            <table class="spec-table">
+                <tr>
+                    <th style="width:160px;">yotei</th>
+                    <td>
+                        <strong>予定表管理データベース（本体）</strong><br>
+                        医師予定データ (<code>events</code>)、医師マスタ (<code>doctors</code>)、部門マスタ (<code>departments</code>)、小野会全体会 (<code>all_meetings</code>)、システム設定 (<code>settings</code>) を管理。
+                    </td>
+                </tr>
+                <tr>
+                    <th>kawara</th>
+                    <td>
+                        <strong>院内かわら版システム 統合マスターデータベース</strong><br>
+                        全職員スタッフマスタ (<code>staff</code>) を参照。かわら版認証（PINコード・端末固定Cookie・管理者フラグ <code>is_admin</code>）およびイベント連携を担う。
+                    </td>
+                </tr>
+            </table>
+        </section>
+
+        <!-- 3. 認証・端末固定仕様 -->
+        <section class="spec-section" id="sec-3">
+            <h2 class="section-title"><i class="fa-solid fa-user-shield" style="color:var(--primary);"></i> 3. 認証・端末固定仕様</h2>
+            <p>
+                院内かわら版システムと完全に同一のログイン画面・認証方式（<code>LIB/auth_helper.php</code>）を共有しています。
+            </p>
+            <ul>
+                <li><strong>ワンタップログイン:</strong> スタッフ一覧から自分の名前（写真アイコン付き）をタップするだけで即座にログイン。</li>
+                <li><strong>3×4 テンキー暗証番号（PINコード）認証:</strong> 暗証番号が設定されている医師・役職者・管理者は、タッチしやすいモーダルテンキーでPIN（4〜7桁）を入力して認証。</li>
+                <li><strong>スマホ・ブラウザ端末自動固定（Remember Device）:</strong>
+                    初回ログイン時に安全な署名付きCookie（<code>kawara_device_token</code>）を発行。以降180日間、ログイン画面を完全にスキップしてポータルへ自動遷移。
+                </li>
+                <li><strong>マルチタブ独立セッション（session_tab.php）:</strong>
+                    ブラウザの別タブで異なるスタッフとしてログインしてもセッションが混ざらないよう、URLパラメータ <code>tab_id</code> と <code>sessionStorage</code> を連動させてタブごとに独立したセッション状態を維持。
+                </li>
+            </ul>
+        </section>
+
+        <!-- 4. 画面一覧・画面遷移図 -->
+        <section class="spec-section" id="sec-4">
+            <h2 class="section-title"><i class="fa-solid fa-diagram-project" style="color:var(--primary);"></i> 4. 画面一覧・画面遷移図</h2>
+            
+            <div class="diagram-container">
+                <div class="diagram-flow">
+                    <div class="diagram-row">
+                        <div class="diagram-node">ログイン画面 (login.php)</div>
+                        <span class="diagram-arrow">&rarr; [認証成功 / 端末固定] &rarr;</span>
+                        <div class="diagram-node" style="border-width:3px;background:#eff6ff;">ポータルメニュー (index.php)</div>
+                    </div>
+                    <div class="diagram-row" style="margin-left: 180px;">
+                        <span class="diagram-arrow">&darr;</span>
+                    </div>
+                    <div class="diagram-row" style="margin-left: 120px;">
+                        <div class="diagram-node">予定表一覧 (yotei_list.php)</div>
+                        <div class="diagram-node">カレンダー (calendar.php)</div>
+                        <div class="diagram-node">予定登録 (input.php)</div>
+                        <div class="diagram-node admin">マスター管理 (master/index.php)</div>
+                    </div>
+                    <div class="diagram-row" style="margin-left: 140px;">
+                        <span class="diagram-arrow">&darr; 編集クリック</span>
+                        <span class="diagram-arrow" style="margin-left: 170px;">&darr; 日付枠クリック</span>
+                        <span class="diagram-arrow" style="margin-left: 70px;">&darr; 管理者PIN認証</span>
+                    </div>
+                    <div class="diagram-row" style="margin-left: 130px;">
+                        <div class="diagram-node">予定編集 (edit.php)</div>
+                        <div class="diagram-node admin">各マスタ設定 (doctor/dept/all_meeting)</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. 各画面詳細仕様 -->
+        <section class="spec-section" id="sec-5">
+            <h2 class="section-title"><i class="fa-solid fa-window-maximize" style="color:var(--primary);"></i> 5. 各画面詳細仕様</h2>
+
+            <!-- 5.1 ポータル -->
+            <div id="sec-5-1">
+                <h3 class="sub-title">5.1 ポータル・エントリ画面 (index.php)</h3>
+                <p>当該システムのエントリ画面。ログイン中のスタッフ名を表示し、各主要機能への直感的なナビゲーションを提供。</p>
+                <ul>
+                    <li><strong>主要機能カード:</strong>
+                        1) 医師予定表一覧（yotei_list.php）、2) 小野会カレンダー（calendar.php）、3) 新規予定登録（input.php）、4) マスター管理（master/index.php ※管理者認証）、5) 外部連携API（api/index.php）、6) 院内かわら版（/kawara/index.php）。
+                    </li>
+                    <li><strong>ダッシュボードウィジェット:</strong>
+                        今後14日間の直近予定サマリー、および当月の小野会全体会案内（開催予定/開催済みステータス）を表示。
+                    </li>
+                </ul>
+            </div>
+
+            <!-- 5.2 予定一覧 -->
+            <div id="sec-5-2" style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border);">
+                <h3 class="sub-title">5.2 医師予定表一覧 (yotei_list.php)</h3>
+                <p>医師の予定を時系列に一覧表示する基本画面。印刷用スタイル（@media print）に最適化。</p>
+                <ul>
+                    <li><strong>過去予定の視認性向上:</strong>
+                        従来の <code>opacity: 0.4</code> によるかすれ文字を撤廃。背景 <code>#f8fafc</code> に濃いスレートグレー（<code>#334155</code>）のテキストを採用し、可読性と印刷品質を担保。
+                    </li>
+                    <li><strong>⏳ 過去バッジ:</strong>
+                        昨日以前の過去の予定行には、予定内容セルおよび操作セルに <code>⏳ 過去</code> バッジを明示し、直感的に判別可能。
+                    </li>
+                    <li><strong>操作機能:</strong>
+                        公開／非公開のワンタップ切替、予定取消、取消予定の復活（履歴管理テーブル <code>event_history</code> に完全記録）。
+                    </li>
+                </ul>
+            </div>
+
+            <!-- 5.3 カレンダー -->
+            <div id="sec-5-3" style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border);">
+                <h3 class="sub-title">5.3 小野会カレンダー (calendar.php)</h3>
+                <p>Googleカレンダーに匹敵するリッチな月間カレンダー。CSS Gridによる週単位スロットシステムを搭載。</p>
+                <ul>
+                    <li><strong>週またぎ帯（マルチデイバー）表示:</strong>
+                        複数日にまたがる予定（出張・休診・リフォーム等）は該当列を連続横断するカラーバーとして描画。土曜〜日曜の週またぎ時は右端 <code>▶</code> および翌週左端 <code>◀</code> の継続インジケーター付きで自然に折り返し。
+                    </li>
+                    <li><strong>リッチホバーツールチップ:</strong>
+                        PCではバーにマウスオーバーすると、医師フルネーム・時間帯・タイトル・備考・状態カードが即座にポップアップ。
+                    </li>
+                    <li><strong>1ヶ月表示 ⇔ 3ヶ月連続表示切替:</strong>
+                        上部トグルボタンでワイドな1ヶ月表示と、連続3ヶ月縦積み表示をワンタップ切替。
+                    </li>
+                    <li><strong>+他○件 ＆ 当日全予定モーダル:</strong>
+                        1日に予定が集中した場合（1ヶ月表示は4件目以降）、下部に「+他○件」を表示。クリックで当日の全予定一覧モーダルを展開。
+                    </li>
+                </ul>
+            </div>
+
+            <!-- 5.4 予定登録 -->
+            <div id="sec-5-4" style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border);">
+                <h3 class="sub-title">5.4 新規予定登録 (input.php)</h3>
+                <p>予定の新規作成画面。スマートフォンでもスクロール不要で素早く入力できるよう縦方向を圧縮。</p>
+                <ul>
+                    <li><strong>期間指定時の終日固定仕様:</strong>
+                        日付パターンで「期間」を選択した場合、時間パターンは「終日」に自動固定（開始・終了時間入力欄を自然に非活性化）。
+                    </li>
+                    <li><strong>動的戻り先:</strong>
+                        パラメータ <code>return_to</code>（list / calendar / index）に応じて、キャンセル時および登録完了時の遷移先を自動連動。
+                    </li>
+                </ul>
+            </div>
+
+            <!-- 5.5 マスター管理 -->
+            <div id="sec-5-5" style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border);">
+                <h3 class="sub-title">5.5 マスター管理 (master/index.php)</h3>
+                <p>医師マスタ、部門マスタ、全体会日程、特記事項の管理機能。</p>
+                <ul>
+                    <li><strong>安全な管理者暗証番号認証 (LIB/master_auth.php):</strong>
+                        ソース内の固定書ききりを全廃。かわら版スタッフマスター上の管理者（<code>is_admin = true</code>）の暗証番号（PINコード）で照合して認証。
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- 6. データベース設計 -->
+        <section class="spec-section" id="sec-6">
+            <h2 class="section-title"><i class="fa-solid fa-database" style="color:var(--primary);"></i> 6. データベース設計（テーブル定義）</h2>
+            
+            <h3 class="sub-title">6.1 events（予定テーブル）</h3>
+            <table class="spec-table">
+                <thead><tr><th>カラム名</th><th>型</th><th>制約</th><th>論理名・説明</th></tr></thead>
+                <tbody>
+                    <tr><td><code>id</code></td><td>SERIAL</td><td>PRIMARY KEY</td><td>予定ID</td></tr>
+                    <tr><td><code>doctor_id</code></td><td>INT</td><td>REFERENCES doctors(id)</td><td>医師ID</td></tr>
+                    <tr><td><code>department_id</code></td><td>INT</td><td>REFERENCES departments(id)</td><td>部門ID</td></tr>
+                    <tr><td><code>start_date</code></td><td>DATE</td><td>NOT NULL</td><td>開始日</td></tr>
+                    <tr><td><code>end_date</code></td><td>DATE</td><td>NULL可</td><td>終了日（期間予定の場合）</td></tr>
+                    <tr><td><code>start_time</code></td><td>TIME</td><td>NULL可</td><td>開始時間（NULL時は終日）</td></tr>
+                    <tr><td><code>end_time</code></td><td>TIME</td><td>NULL可</td><td>終了時間</td></tr>
+                    <tr><td><code>title</code></td><td>VARCHAR(255)</td><td>NOT NULL</td><td>用件・タイトル</td></tr>
+                    <tr><td><code>note</code></td><td>TEXT</td><td>NULL可</td><td>備考・詳細メモ</td></tr>
+                    <tr><td><code>event_type</code></td><td>VARCHAR(50)</td><td>NOT NULL</td><td>種別（absence, clinic, meeting, business_trip）</td></tr>
+                    <tr><td><code>is_public</code></td><td>BOOLEAN</td><td>DEFAULT true</td><td>公開フラグ</td></tr>
+                    <tr><td><code>is_cancelled</code></td><td>BOOLEAN</td><td>DEFAULT false</td><td>取消フラグ</td></tr>
+                    <tr><td><code>created_at</code></td><td>TIMESTAMP</td><td>DEFAULT CURRENT_TIMESTAMP</td><td>作成日時</td></tr>
+                    <tr><td><code>updated_at</code></td><td>TIMESTAMP</td><td>DEFAULT CURRENT_TIMESTAMP</td><td>更新日時</td></tr>
+                </tbody>
+            </table>
+
+            <h3 class="sub-title">6.2 doctors（医師マスタ）</h3>
+            <table class="spec-table">
+                <thead><tr><th>カラム名</th><th>型</th><th>制約</th><th>論理名・説明</th></tr></thead>
+                <tbody>
+                    <tr><td><code>id</code></td><td>SERIAL</td><td>PRIMARY KEY</td><td>医師ID</td></tr>
+                    <tr><td><code>last_name</code></td><td>VARCHAR(50)</td><td>NOT NULL</td><td>姓</td></tr>
+                    <tr><td><code>first_name</code></td><td>VARCHAR(50)</td><td>NULL可</td><td>名</td></tr>
+                    <tr><td><code>short_name</code></td><td>VARCHAR(20)</td><td>NOT NULL</td><td>短縮表示名（カレンダー帯用）</td></tr>
+                    <tr><td><code>title</code></td><td>VARCHAR(50)</td><td>NULL可</td><td>役職（院長、医師など）</td></tr>
+                    <tr><td><code>department_id</code></td><td>INT</td><td>NULL可</td><td>主所属部門ID</td></tr>
+                    <tr><td><code>sort_order</code></td><td>INT</td><td>DEFAULT 0</td><td>並び順</td></tr>
+                    <tr><td><code>is_active</code></td><td>BOOLEAN</td><td>DEFAULT true</td><td>有効フラグ</td></tr>
+                </tbody>
+            </table>
+
+            <h3 class="sub-title">6.3 all_meetings（小野会全体会テーブル）</h3>
+            <table class="spec-table">
+                <thead><tr><th>カラム名</th><th>型</th><th>制約</th><th>論理名・説明</th></tr></thead>
+                <tbody>
+                    <tr><td><code>id</code></td><td>SERIAL</td><td>PRIMARY KEY</td><td>全体会ID</td></tr>
+                    <tr><td><code>meeting_date</code></td><td>DATE</td><td>NOT NULL</td><td>開催日</td></tr>
+                    <tr><td><code>start_time</code></td><td>TIME</td><td>NOT NULL</td><td>開始時刻</td></tr>
+                    <tr><td><code>title</code></td><td>VARCHAR(255)</td><td>NOT NULL</td><td>会議名（例: 小野会全体会）</td></tr>
+                    <tr><td><code>location</code></td><td>VARCHAR(255)</td><td>NULL可</td><td>開催場所（例: 胃腸科1F食堂）</td></tr>
+                    <tr><td><code>is_cancelled</code></td><td>BOOLEAN</td><td>DEFAULT false</td><td>中止フラグ</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- 7. セキュリティ・保守方針 -->
+        <section class="spec-section" id="sec-7">
+            <h2 class="section-title"><i class="fa-solid fa-lock" style="color:var(--primary);"></i> 7. セキュリティ・保守方針</h2>
+            <ul>
+                <li><strong>パスワード直書きの完全排除:</strong> システム内の全スクリプトからハードコードパスワードを撤廃。管理権限の照合はデータベースの正規アカウントを介して実施。</li>
+                <li><strong>SQLインジェクション対策:</strong> すべてのDBクエリにPDOプリペアドステートメントを採用。</li>
+                <li><strong>XSS（クロスサイトスクリプティング）対策:</strong> 画面出力時に <code>htmlspecialchars()</code> によるサニタイズを徹底。</li>
+                <li><strong>操作履歴の保存:</strong> 予定の取消・復活・公開切替は <code>event_history</code> テーブルに変更内容・操作日時・操作者を記録。</li>
+            </ul>
+        </section>
+
+    </main>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,19 @@
+# OS generated files
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temporary / Log files
+*.log
+*.dump
+*cookie*.txt
+scratch/
+
+# Backup files (optional: keep or ignore based on project)
+# *.bak
